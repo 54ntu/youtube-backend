@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+var aggregatePaginate = require("mongoose-aggregate-paginate-v2");
 const videoSchema = new mongoose.Schema({
     videoFile:{
         type:String, //url of video from third party services will be saved into database
@@ -47,6 +47,9 @@ const videoSchema = new mongoose.Schema({
     timestamps:true,
 })
 
+
+
+videoSchema.plugin(aggregatePaginate);
 
 const Video = mongoose.model('Video',videoSchema);
 module.exports = {Video};
