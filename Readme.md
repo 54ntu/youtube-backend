@@ -126,8 +126,11 @@ res.status(200)
 ```
 
 <hr>
-# How can we logout user 
+
+# How can we logout user
+
 <p>if we destroy session id or token from the database and clear the token from the cookies then we can easily logout the user</p>
+
 ```javascript
 
 
