@@ -111,10 +111,10 @@ const getPaginatedUsers = async (page, limit, filter, sort) => {
 
 ```javascript
 
-const options=[
+const options={
 httpOnly:true,
 secure:true
-]
+}
 
 res.status(200)
 .cookie("accessToken",accessToken,options)
