@@ -102,3 +102,30 @@ const getPaginatedUsers = async (page, limit, filter, sort) => {
   Use mongoose-aggregate-paginate-v2 when you need to handle large datasets efficiently, especially in user interfaces where users interact with lists of items. Avoid using it for operations that involve single document retrieval or when the dataset is small enough that performance is not a concern. By following these guidelines, you can ensure that you use pagination effectively and only where it provides clear benefits.
 </p>
 
+<hr>
+<h2>AccessToken and Refresh Token Notes</h2>
+<p>Generally we can work with only using the AccessToken. But we can also work by generating both accessToken and RefreshToken. <b>AccessToken</b> is considered as short lived Token whereas <b>RefreshToken</b> is considered as long lived token. which means AccessToken remains for short duration and RefreshToken remains longer than AccessToken. We store this refreshToken into the database and also send it to the user through response. </p>
+<h3>How does this refreshToken helps????</h3>
+<p>Generally, when the accessToken is expired or user Logout , but the user has that refreshToken  if that user hit the certain api endpoint with the refreshToken then the user can logged in</p>
+<h3>while setting the token into the cookies, generally that token can be manipulated from the client side i.e. frontend. so we defined options before setting that token into the cookies. In that case, that token can be manipulated from the server side only.</h3>
+
+```javascript
+
+const options=[
+httpOnly:true,
+secure:true
+]
+
+res.status(200)
+.cookie("accessToken",accessToken,options)
+.cookie("refreshToken",refreshToken,options)
+.json(
+//here send the json data with status code, data and message
+)
+
+```
+
+
+
+
+
