@@ -38,10 +38,12 @@ const userSchema = new mongoose.Schema(
       type: String, //url from cloudinary
     },
 
-    watchHistory: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Video",
-    },
+    watchHistory: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
 
     refreshToken: {
       type: String,
