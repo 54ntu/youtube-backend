@@ -322,10 +322,26 @@ try {
 
 })
 
+
+
+const getCurrentUser = asyncHandler(async(req,res)=>{
+  try {
+      const user = await User.findById(req.user?._id).select(" -password -refreshToken")
+      // console.log(user); 
+  
+      return res.status(200)
+      .json(new ApiResponse(200,user,"current user data fetched successfully!!!"))
+  } catch (error) {
+    console.log(error?.message || "error while fetching the current user data!!!")
+  }
+
+})
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
   changePassword,
+  getCurrentUser,
 };
