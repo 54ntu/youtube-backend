@@ -337,6 +337,101 @@ const getCurrentUser = asyncHandler(async(req,res)=>{
 
 })
 
+
+
+const updateUserDetail = asyncHandler(async(req,res)=>{
+  console.log(req.body);
+  const {email,fullName} = req.body
+  if(!(email && fullName)){
+    throw new ApiError(401,"all fields are required!!!");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        email,
+        fullName     
+        }
+      
+    },
+    {
+      new:true
+    }
+  ).select(" -password -refreshToken")
+
+  return res.status(200)
+  .json(new ApiResponse(200,user,"email and fullName is updated!!!"))
+
+})
+
+
+const updateUserAvatar = asyncHandler(async(req,res)=>{
+  const avatarLocalfilePath = req.file?.path
+  if(!avatarLocalfilePath){
+    throw new ApiError(404,"avatarlocalpath is not found!!!");
+
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalfilePath);
+  if(!avatar){
+    throw new ApiError(400,'Avatar is required!!!')
+  }
+
+  // console.log("avatar ",avatar);
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar?.url,
+      },
+    },
+    {
+      new: true,
+    },
+  ).select(" -password -refreshToken");
+
+  return res.status(200)
+  .json(new ApiResponse(200,user,"user avatar is updated successfully!!!"))
+
+
+})
+
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalfilePath = req.file?.path;
+  if (!coverImageLocalfilePath) {
+    throw new ApiError(400, "coverImageLocalfilePath is not found!!!");
+  }
+
+  const coverImage = await uploadOnCloudinary(coverImageLocalfilePath);
+  if (!coverImage) {
+    throw new ApiError(400, "coverImage is required!!!");
+  }
+
+  // console.log("avatar ",avatar);
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage?.url || "",
+      },
+    },
+    {
+      new: true,
+    },
+  ).select(" -password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "user coverImage is updated successfully!!!"));
+});
+
+
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -344,4 +439,7 @@ module.exports = {
   refreshAccessToken,
   changePassword,
   getCurrentUser,
+  updateUserDetail,
+  updateUserAvatar,
+  updateUserCoverImage,
 };

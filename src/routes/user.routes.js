@@ -1,28 +1,46 @@
-const express = require('express');
-const { registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser } = require('../controllers/user.controllers');
-const {upload} = require("../middlewares/multer.middlewares");
-const { verifyJWT } = require('../middlewares/auth.middlewares');
+const express = require("express");
+const {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changePassword,
+  getCurrentUser,
+  updateUserDetail,
+  updateUserAvatar,
+  updateUserCoverImage,
+} = require("../controllers/user.controllers");
+const { upload } = require("../middlewares/multer.middlewares");
+const { verifyJWT } = require("../middlewares/auth.middlewares");
 const router = express.Router();
 
-router.route('/register').post(upload.fields([
+router.route("/register").post(
+  upload.fields([
     {
-        name:"avatar",
-        maxCount:1
+      name: "avatar",
+      maxCount: 1,
     },
     {
-        name:"coverImage",
-        maxCount:1
-
-    }
-])   ,registerUser);
+      name: "coverImage",
+      maxCount: 1,
+    },
+  ]),
+  registerUser,
+);
 
 router.route("/login").post(loginUser);
 
 //secured routes
-router.route("/logout").post(verifyJWT,logoutUser);
+router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
-router.route("/changePassword").post(verifyJWT,changePassword)
-router.route("/getUser").get(verifyJWT,getCurrentUser);
+router.route("/changePassword").post(verifyJWT, changePassword);
+router.route("/getUser").get(verifyJWT, getCurrentUser);
+router.route("/update").put(verifyJWT, updateUserDetail);
+router
+  .route("/update-avatar")
+  .put(verifyJWT, upload.single("avatar"), updateUserAvatar);
+router
+  .route("/update-coverImage")
+  .put(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
-
-module.exports = {router}
+module.exports = { router };
