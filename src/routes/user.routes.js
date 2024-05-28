@@ -9,6 +9,8 @@ const {
   updateUserDetail,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory,
 } = require("../controllers/user.controllers");
 const { upload } = require("../middlewares/multer.middlewares");
 const { verifyJWT } = require("../middlewares/auth.middlewares");
@@ -35,12 +37,15 @@ router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/changePassword").post(verifyJWT, changePassword);
 router.route("/getUser").get(verifyJWT, getCurrentUser);
-router.route("/update").put(verifyJWT, updateUserDetail);
+router.route("/update").patch(verifyJWT, updateUserDetail);
 router
   .route("/update-avatar")
-  .put(verifyJWT, upload.single("avatar"), updateUserAvatar);
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
   .route("/update-coverImage")
-  .put(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+
+router.route("/channel/:username").get(verifyJWT, getUserChannelProfile);
+router.route("/history").get(verifyJWT, getWatchHistory);
 
 module.exports = { router };

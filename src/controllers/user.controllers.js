@@ -420,7 +420,8 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const username = req.params;
+  const username = req.params.username;
+  // console.log("username     : ",username);
   console.log(username);
   if (!username?.trim()) {
     throw new ApiError(400, "username is required!!!");
@@ -485,78 +486,75 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
 
-
-  if(!channel?.length){
-    throw new ApiError(404,"channel doesnot exist!!")
+  if (!channel?.length) {
+    throw new ApiError(404, "channel doesnot exist!!");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200,channel[0],'user channel data fetched successfully!!!')
-  )
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        channel[0],
+        "user channel data fetched successfully!!!",
+      ),
+    );
 });
 
-
-
-
-
-const getWatchHistory = asyncHandler(async(req,res)=>{
-
+const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
-      $match:{
-        _id:new mongoose.Types.ObjectId(req,user._id)
-      }
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
     },
     {
-      $lookup:{
-        from:"videos",
-        localField:"watchHistory",
-        foreignField:"_id",
-        as:"watchHistory",
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
 
-        pipeline:[
+        pipeline: [
           {
-            $lookup:{
-              from:'users',
-              localfield:"owner",
-              foreignField:"_id",
-              as:"owner",
-              pipeline:[
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
                 {
-                  $project:{
-                    fullName:1,
-                    username:1,
-                    avatar:1,
-
-                  }
-                }
-              ]
-            }
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
           },
           {
-            $addFields:{
-              owner:{
-                $first:"$owner"
-              }
-            }
-          }
-        ]
-      }
-    }
-  ])
-
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200,user[0].watchHistory,"watchHistory is fetched successfully...")
-  )
-
-})
-
-
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "watchHistory is fetched successfully...",
+      ),
+    );
+});
 
 module.exports = {
   registerUser,
