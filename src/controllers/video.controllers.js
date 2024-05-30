@@ -37,9 +37,9 @@ const publishAVideo =  asyncHandler(async(req,res)=>{
 
 
     const video = await uploadOnCloudinary(videoFilePath);
-    console.log("response after cloudinary upload : ", video);
+    // console.log("response after cloudinary upload : ", video);
     const thumbnail = await uploadOnCloudinary(thumbnailFilePath);
-    console.log("response from cloudinary for thumbnail is : ", thumbnail);
+    // console.log("response from cloudinary for thumbnail is : ", thumbnail);
 
     
 
@@ -77,10 +77,17 @@ const publishAVideo =  asyncHandler(async(req,res)=>{
 
 
 
+const getVideoById = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  //TODO: get video by id
+});
+
+
 
 
 
 module.exports = {
   getAllVideos,
   publishAVideo,
+  getVideoById,
 };
