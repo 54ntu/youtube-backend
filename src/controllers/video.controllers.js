@@ -1,82 +1,70 @@
-const {asyncHandler} = require("../utils/asyncHandler");
-const {Video} = require('../models/video.models')
-const {ApiError} = require('../utils/ApiError');
-const {ApiResponse} = require("../utils/ApiResponse")
+const { asyncHandler } = require("../utils/asyncHandler");
+const { Video } = require("../models/video.models");
+const { ApiError } = require("../utils/ApiError");
+const { ApiResponse } = require("../utils/ApiResponse");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
 const { default: mongoose } = require("mongoose");
 
-const getAllVideos = asyncHandler(async(req,res)=>{
-    const videos = await Video.find();
-    console.log(videos);
+const getAllVideos = asyncHandler(async (req, res) => {
+  const videos = await Video.find();
+  console.log(videos);
+});
 
+const publishAVideo = asyncHandler(async (req, res) => {
+  //get the title and description from the req.body
+  //check if empty
+  //get video and thumbnail path
+  //upload them into cloudinary
+  //check video and thumbnail
+  //if ok then go for create
 
+  const { title, description } = req.body;
+  if (!(title && description)) {
+    throw new ApiError(400, "title and description are required!!!!");
+  }
 
-})
+  const videoFilePath = req.files?.video[0]?.path;
+  // console.log("videoFilePath : ", videoFilePath);
+  const thumbnailFilePath = req.files?.thumbnail[0]?.path;
+  // console.log("thumbnailFilePath : ", thumbnailFilePath);
+  if (!(videoFilePath && thumbnailFilePath)) {
+    throw new ApiError(
+      400,
+      "videofilePath and thumbnailFilepath is required!!!!!!",
+    );
+  }
 
+  const video = await uploadOnCloudinary(videoFilePath);
+  // console.log("response after cloudinary upload : ", video);
+  const thumbnail = await uploadOnCloudinary(thumbnailFilePath);
+  // console.log("response from cloudinary for thumbnail is : ", thumbnail);
 
+  if (!(video && thumbnail)) {
+    throw new ApiError(400, "video url and thumbnail url is required!!!");
+  }
 
-const publishAVideo =  asyncHandler(async(req,res)=>{
-    //get the title and description from the req.body
-    //check if empty
-    //get video and thumbnail path
-    //upload them into cloudinary
-    //check video and thumbnail
-    //if ok then go for create
+  const response = await Video.create({
+    title,
+    description,
+    videoFile: video.url,
+    thumbnail: thumbnail.url,
+    duration: video.duration,
+    owner: req.user?._id,
+    isPublished: true,
+  });
 
-    const {title,description}=req.body;
-    if(!(title && description)){
-            throw new ApiError(400,"title and description are required!!!!")
-    }
+  const isUploaded = await Video.findById(response._id);
 
-    const videoFilePath = req.files?.video[0]?.path;
-    // console.log("videoFilePath : ", videoFilePath);
-    const thumbnailFilePath = req.files?.thumbnail[0]?.path;
-    // console.log("thumbnailFilePath : ", thumbnailFilePath);
-    if(!(videoFilePath && thumbnailFilePath)){
-        throw new ApiError(400,"videofilePath and thumbnailFilepath is required!!!!!!");
-    }
+  if (!isUploaded) {
+    throw new ApiError(500, "error while publishing video");
+  }
 
-
-    const video = await uploadOnCloudinary(videoFilePath);
-    // console.log("response after cloudinary upload : ", video);
-    const thumbnail = await uploadOnCloudinary(thumbnailFilePath);
-    // console.log("response from cloudinary for thumbnail is : ", thumbnail);
-
-    
-
-    if(!(video && thumbnail)){
-        throw new ApiError(400,"video url and thumbnail url is required!!!");
-    }
-
-
-    const response = await Video.create({
-        title,
-        description,
-        videoFile: video.url,
-        thumbnail:thumbnail.url,
-        duration:video.duration,
-        owner : req.user?._id,
-        isPublished:true,
-
-
-    })
-
-
-    const isUploaded = await Video.findById(response._id);
-
-    if (!isUploaded) {
-      throw new ApiError(500, "error while publishing video");
-    }
-
-
-    return res.status(200)
+  return res
+    .status(200)
     .json(
-        new ApiResponse(200,response, "new video published successfully.....")
-    )
-    
-})
-
-
+      new ApiResponse(200, response, "new video published successfully....."),
+    );
+});
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -84,10 +72,13 @@ const getVideoById = asyncHandler(async (req, res) => {
   // console.log(req.params);
   //TODO: get video by id
 
-
-  if(!videoId){
-    throw new ApiError(400,"id is not given");
+  if (!videoId) {
+    throw new ApiError(400, "id is not given");
   }
+
+  // console.log("user id is : ",req.user._id);
+
+  // const response = await Video.findById(videoId);
 
   const video = await Video.aggregate([
     {
@@ -95,14 +86,16 @@ const getVideoById = asyncHandler(async (req, res) => {
         _id: new mongoose.Types.ObjectId(videoId),
       },
     },
+
     {
       $lookup: {
-        from: "likesmodels",
+        from: "likes",
         localField: "_id",
         foreignField: "video",
         as: "likes",
       },
     },
+
     {
       $lookup: {
         from: "users",
@@ -120,13 +113,16 @@ const getVideoById = asyncHandler(async (req, res) => {
           },
           {
             $addFields: {
-              subscribercount: {
+              subscriberCount: {
                 $size: "$subscribers",
               },
               isSubscribed: {
                 $cond: {
                   if: {
-                    $in: [req.user?._id, "$subscribers.subscriber"],
+                    $in: [
+                      new mongoose.Types.ObjectId(req.user?._id),
+                      "$subscribers.subscriber",
+                    ],
                   },
                   then: true,
                   else: false,
@@ -136,9 +132,9 @@ const getVideoById = asyncHandler(async (req, res) => {
           },
           {
             $project: {
+              avatar: 1,
               username: 1,
-              "avatar.url": 1,
-              subscribercount: 1,
+              subscriberCount: 1,
               isSubscribed: 1,
             },
           },
@@ -146,45 +142,55 @@ const getVideoById = asyncHandler(async (req, res) => {
       },
     },
 
+    //actually we are getting owner fields as array data so to convert that array into object we can use another stages
     {
       $addFields: {
-        likesCount: {
-          $size: "$likes",
-        },
         owner: {
-          $first: "owner",
+          $first: "$owner",
+        },
+      },
+    },
+    {
+      $addFields: {
+        likeCount: {
+          $size: "$likes",
         },
         isLiked: {
           $cond: {
-            if: { $in: [req.user?._id, "$likes.likedBy"] },
+            if: {
+              $in: [
+                new mongoose.Types.ObjectId(req.user?._id),
+                "$likes.likedBy",
+              ],
+            },
             then: true,
             else: false,
           },
         },
       },
     },
+
     {
       $project: {
-        "videoFile.url": 1,
-        title: 1,
-        description: 1,
-        views: 1,
-        createdAt: 1,
-        duration: 1,
-        comments: 1,
+        videoFile: 1,
         owner: 1,
-        likesCount: 1,
+        likeCount: 1,
         isLiked: 1,
       },
     },
   ]);
 
+  if(video?.length<1){
+    throw new ApiError(404, "video not found!!!")
+  }
 
-  return res.json(video)
+
+  return res.status(200)
+  .json(
+    new ApiResponse(200, video[0],"video fetched successfully")
+  )
 
 });
-
-
 
 
 
