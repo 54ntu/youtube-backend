@@ -1,5 +1,189 @@
 - [here is the link for database design](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
 <h2>Backend in Node.js</h2>
+<hr>
+<h1>important Notes regard delete old images or old file from the cloudinary when we are updating them</h1>
+<p>To delete files when we are trying to update file . Cloudinary gives public_id when we upload files into the cloudinary. By using that public_id we can easily delete the old files from the cloudinary as well as upload the new files.</p>
+<p>TO do that we need this configuration</p>
+<h2>while defining schema i.e. in models: </h2>
+<p> we need to define "public_id" field where id will be assigned which is obtained from the cloudinary.</p>
+
+```javascript
+
+const videoSchema = new mongoose.Schema(
+  {
+    videoFile: {
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
+    },
+
+    thumbnail: {
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
+    },
+
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    title: {
+      type: String,
+      required: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+    },
+
+    duration: {
+      type: Number, //time will be given by the cloudinary
+      required: true,
+    },
+
+    views: {
+      type: Number,
+      default: 0,
+    },
+
+    isPublished: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+
+
+videoSchema.plugin(aggregatePaginate);
+
+const Video = mongoose.model('Video',videoSchema);
+module.exports = {Video};
+
+```
+
+
+<h2>We need cloudinary configuration :</h2>
+
+```javascript
+
+const deleteOnCloudinary = async(public_id)=>{
+  try {
+    await cloudinary.uploader.destroy(public_id);
+  } catch (error) {
+    console.log("error on deleting files ", error);
+    
+  }
+
+}
+
+
+
+```
+
+<h2>controller will be written like this: </h2>
+
+```javascript
+const updateVideo = asyncHandler(async (req, res) => {
+  //TODO: update video details like title, description, thumbnail
+  const { videoId } = req.params;
+  const {title, description} = req.body;
+
+  //fetching the thumbnail local file path from req.files
+  const thumbnailLocalPath = req.file?.path
+
+  if(!(isValidObjectId(videoId))){
+    throw new ApiError(400, "videoId is not valid")
+
+  }
+
+  if(!(title && description)){
+    throw new ApiError(400, "title and descriptions are  required")
+  }
+
+
+  //find the video by its ID
+  const video = await Video.findById(videoId);
+
+  //checking the video
+  if(!video){
+    throw new ApiError(404, "video not found...")
+  }
+
+
+  //checking if the user and owner is same
+  if(video.owner.toString() !== req.user?._id.toString()){
+    throw new ApiError(400,"you are not authorized to update video")
+  }
+
+
+  //fetch the public id of old thumbnail to delete
+  const oldThumbnailPublicId = video.thumbnail.public_id;
+
+  if(!thumbnailLocalPath){
+    throw new ApiError(400,"thumbnail local file path is required")
+  }
+
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+  // console.log(thumbnail);
+
+  if(!thumbnail){
+    throw new ApiError(400,"thumbnail is required")
+  }
+
+  const updatedVideoFile = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set:{
+        title,
+        description,
+        thumbnail:{
+          public_id:thumbnail.public_id,
+          url:thumbnail.url
+        }
+      }
+    },
+    {
+      new:true
+    }
+   
+  );
+
+  if (!updatedVideoFile) {
+    throw new ApiError(500, "error on updating video file");
+  }
+
+  if (updatedVideoFile) {
+    await deleteOnCloudinary(oldThumbnailPublicId);
+  }
+
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedVideoFile, "data updated successfully"));
+
+
+
+});
+
+```
+
+<hr>
 <p>Here I am trying to build backend apis for the given database design. I will implement professional way to maintain folder & file structure in Node.js project</p>
 
 <p>This one is one of the best project where all the concepts like CRUD and aggregation pipeline concepts will be implemented.</p>
