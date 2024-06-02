@@ -145,4 +145,52 @@ const updateTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updatedTweets, "tweets updated successfully!!"));
 });
 
-module.exports = { createTweet, getUserTweets, updateTweet };
+
+const deleteTweet = asyncHandler(async (req, res) => {
+  //TODO: delete tweet
+
+  //get the tweet id to delete from req.params
+  //get user id from the req
+  //validate both the id
+  //query database using tweet id
+  //validate user and owner of the tweet is same
+  //query database to delete
+  //return response
+
+  const {tweetId} = req.params
+  const user_id = req.user?._id
+  if(!isValidObjectId(tweetId)){
+    throw new ApiError(400,"tweet id is not valid")
+  }
+
+  if(! isValidObjectId(user_id)){
+    throw new ApiError(400,"user id is not valid")
+  }
+
+  const tweet = await TweetModel.findById(tweetId);
+  
+  if(!tweet){
+    throw new ApiError(404,"tweets not found")
+  }
+
+  if(tweet.owner.toString() !== req.user?._id.toString()){
+    throw new ApiError(400,"you are not the owner of this tweets")
+
+  }
+
+  const deleteTweet = await TweetModel.findByIdAndDelete(tweetId);
+  if(!deleteTweet){
+    throw new ApiError(500,"error while deleting the tweets")
+  }
+
+  return res.status(200)
+  .json(
+    new ApiResponse(200,
+        "tweets deleted successfully.."
+    )
+  )
+
+
+});
+
+module.exports = { createTweet, getUserTweets, updateTweet, deleteTweet };
