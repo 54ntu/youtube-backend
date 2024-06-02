@@ -4,6 +4,7 @@ const {
   getVideoById,
   updateVideo,
   deleteVideo,
+  togglePublishStatus,
 } = require("../controllers/video.controllers");
 const { verifyJWT } = require("../middlewares/auth.middlewares");
 const { upload } = require("../middlewares/multer.middlewares");
@@ -30,5 +31,6 @@ videoRouter
   .patch(verifyJWT, upload.single("thumbnail"), updateVideo);
 
 videoRouter.route("/delete/:videoId").delete(verifyJWT, deleteVideo);
+videoRouter.route("/toggle/publish/:videoId").patch(verifyJWT,togglePublishStatus);
 
 module.exports = { videoRouter };
