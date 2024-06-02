@@ -35,9 +35,9 @@ const getUserTweets = asyncHandler(async (req, res) => {
   // TODO: get user tweets
   const user_id = req.user?._id;
   //    console.log(user_id);
-    if(!isValidObjectId(user_id)){
-        throw new ApiError(400,"user id is not valid")
-    }
+  if (!isValidObjectId(user_id)) {
+    throw new ApiError(400, "user id is not valid");
+  }
 
   const userTweets = await TweetModel.aggregate([
     {
@@ -77,17 +77,72 @@ const getUserTweets = asyncHandler(async (req, res) => {
     },
   ]);
 
-//   console.log(userTweets);
+  //   console.log(userTweets);
 
-if(!userTweets){
-    throw new ApiError(404,"user tweets is not found")
-}
+  if (!userTweets) {
+    throw new ApiError(404, "user tweets is not found");
+  }
 
-return res.status(200)
-.json(new ApiResponse(
-    200, userTweets[0],"user tweets is fetched successfully!!!"
-))
-
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        userTweets[0],
+        "user tweets is fetched successfully!!!",
+      ),
+    );
 });
 
-module.exports = { createTweet, getUserTweets };
+const updateTweet = asyncHandler(async (req, res) => {
+  //TODO: update tweet
+  //get the tweets id from the req.params
+  //validate the id
+  //check the user using req.user?._id is equal to the tweets owner id
+  //query database
+  //return response
+
+  const { content } = req.body;
+  const { tweetId } = req.params;
+  const user_id = req.user?._id;
+  if (!content) {
+    throw new ApiError(400, "content is required");
+  }
+  if (!isValidObjectId(tweetId)) {
+    throw new ApiError(400, "invalid tweet id");
+  }
+
+  if (!isValidObjectId(user_id)) {
+    throw new ApiError(400, "invalid user id");
+  }
+
+  const tweet = await TweetModel.findById(tweetId);
+  //   console.log(tweet)
+
+  if (tweet.owner.toString() !== req.user?._id) {
+    throw new ApiError(400, "you are not the owner of this tweets");
+  }
+
+  const updatedTweets = await TweetModel.findByIdAndUpdate(
+    tweetId,
+    {
+      $set: {
+        content,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  // console.log(updatedTweets);
+  if (!updatedTweets) {
+    throw new ApiError(400, "error while updating tweets");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedTweets, "tweets updated successfully!!"));
+});
+
+module.exports = { createTweet, getUserTweets, updateTweet };
