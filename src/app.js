@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { router } = require('./routes/user.routes');
 const {videoRouter} = require("./routes/video.routes");
+const { tweetRouter } = require('./routes/tweet.routes');
 const app = express()
 
 
@@ -17,5 +18,6 @@ app.use(cookieParser()); // we can access the cookies data from the browser
 
 app.use("/api/v1",router);
 app.use("/api/v1/videos", videoRouter);
+app.use("/api/v1/tweets", tweetRouter);
 
 module.exports={app};
