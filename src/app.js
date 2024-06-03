@@ -5,6 +5,7 @@ const { router } = require("./routes/user.routes");
 const { videoRouter } = require("./routes/video.routes");
 const { tweetRouter } = require("./routes/tweet.routes");
 const { subscriptionRouter } = require("./routes/subscription.routes");
+const { playlistRouter } = require("./routes/playlist.routes");
 const app = express();
 
 app.use(cors());
@@ -19,5 +20,6 @@ app.use("/api/v1", router);
 app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
+app.use("/api/v1/playlist", playlistRouter);
 
 module.exports = { app };
