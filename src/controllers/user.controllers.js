@@ -21,13 +21,13 @@ const registerUser = asyncHandler(async (req, res) => {
   //return response
 
   const { username, email, fullName, password } = req.body;
-  // console.log(username);
+  console.log(username,email,fullName);
   if (!(username && email && fullName && password)) {
     throw new ApiError(400, "all fields are required!!!");
   }
 
   //user already exists - email or username
-
+  console.log(username, email, fullName);
   const userExist = await User.findOne({
     $or: [{ email }, { username }],
   });
@@ -40,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // console.log( req.files?.avatar[0]?.path)
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // // const coverImageLocalPath = req.files?.coverImage[0]?.path;
   let coverImageLocalPath;
   if (
     req.files &&
@@ -61,9 +61,9 @@ const registerUser = asyncHandler(async (req, res) => {
   // );
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
-  console.log("response from cloudinary for avatar: ", avatar);
+  // // console.log("response from cloudinary for avatar: ", avatar);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  console.log("coverImage response from cloudinary is : ", coverImage);
+  // console.log("coverImage response from cloudinary is : ", coverImage);
 
   if (!avatar) {
     throw new ApiError(400, "avatar file is required!!!!");
@@ -71,17 +71,21 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //password hashing
   const hashedPassword = await hashPassword(password);
-  //   console.log('hashpassword : ', hashedPassword);
+    console.log('hashpassword : ', hashedPassword);
+  console.log(username, email, fullName);
 
+
+  // const userId = uuid();
   const user = await User.create({
-    username,
-    email,
-    fullName,
+    username:username,
+    email:email,
+    fullName:fullName,
     password: hashedPassword,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",
   });
 
+  // console.log("user :", user)
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken",
   );
@@ -94,7 +98,10 @@ const registerUser = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(new ApiResponse(200, createdUser, "user created successfully.."));
+
 });
+
+
 
 const loginUser = asyncHandler(async (req, res) => {
   //get the data from the req.body email or username or password
