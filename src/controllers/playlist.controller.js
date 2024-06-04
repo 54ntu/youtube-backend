@@ -227,6 +227,54 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 });
 
 
+const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
+  const { playlistId, videoId } = req.params;
+  // TODO: remove video from playlist
+  if(!isValidObjectId(playlistId)){
+    throw new ApiError(400,"playlist id is not valid")
+
+  }
+
+  if(!isValidObjectId(videoId)){
+    throw new ApiError(400,"video is not valid")
+  }
+
+  const playlistdetails= await Playlist.findById(playlistId);
+  // console.log(playlistdetails)
+
+  if(playlistdetails.owner.toString() !== req.user?._id){
+    throw new ApiError(400,"you are not the owner of this playlist")
+  }
+
+  if(playlistdetails.videos.length<1){
+    throw new ApiError(404,"videos are not available for removing in playlist")
+  }
+
+
+  const playlistaftervideoRemoved= await Playlist.findByIdAndUpdate(playlistId,
+    {
+      $pull:
+        {
+        videos:videoId
+        }
+      
+    },
+    {
+      new:true
+    }
+  )
+  
+  
+  if(!playlistaftervideoRemoved){
+    throw new ApiError(500,"error while removing the videos from playlist")
+  }
+
+
+  return res.status(200)
+  .json(new ApiResponse(200,"videos removed successfully from playlist"))
+
+
+});
 
 
 
@@ -236,4 +284,5 @@ module.exports = {
   getUserPlaylists,
   addVideoToPlaylist,
   getPlaylistById,
+  removeVideoFromPlaylist,
 };
