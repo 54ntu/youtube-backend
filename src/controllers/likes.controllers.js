@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const {asyncHandler} = require("../utils/asyncHandler");
+const { asyncHandler } = require("../utils/asyncHandler");
 const { ApiError } = require("../utils/ApiError");
 const { Likes } = require("../models/likes.models");
 const { ApiResponse } = require("../utils/ApiResponse");
@@ -12,33 +12,40 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   //if not then assign the user id into the isliked field
   //if ok return res
   const { videoId } = req.params;
-  if(!isValidObjectId(videoId)){
-    throw new ApiError(400,"invalid video id")
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "invalid video id");
   }
 
-  const existedLike = await Likes.findOne(
-    {
-      video:videoId,
-      likedBy:req.user?._id
-    }
-  )
+  const existedLike = await Likes.findOne({
+    video: videoId,
+    likedBy: req.user?._id,
+  });
 
   // console.log(existedLike);
-  if(existedLike){
-    await Likes.findByIdAndDelete(existedLike._id)
-    return res.status(200).json(new ApiResponse(200,"unliked successfully!!!"))
-  }
-  else{
+  if (existedLike) {
+    await Likes.findByIdAndDelete(existedLike._id);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "unliked successfully!!!"));
+  } else {
     await Likes.create({
-      video:videoId,
-      likedBy:req.user?._id
+      video: videoId,
+      likedBy: req.user?._id,
+    });
 
-    })
-
-    return res.status(200).json(new ApiResponse(200,"video liked successfully!!!"))
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "video liked successfully!!!"));
   }
-
 });
 
+const toggleCommentLike = asyncHandler(async (req, res) => {
+  //TODO: toggle like on comment
+  //get the commentId from req.params
+  //check the existence of like into the comment
+  //if exist delete like
+  //
+  const { commentId } = req.params;
+});
 
-module.exports={toggleVideoLike}
+module.exports = { toggleVideoLike, toggleCommentLike };
