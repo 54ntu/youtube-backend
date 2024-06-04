@@ -6,6 +6,7 @@ const {
   addVideoToPlaylist,
   getPlaylistById,
   removeVideoFromPlaylist,
+  deletePlaylist,
 } = require("../controllers/playlist.controller");
 const playlistRouter = express.Router();
 
@@ -19,10 +20,11 @@ playlistRouter
 playlistRouter
   .route("/getPlaylist/:playlistId")
   .get(verifyJWT, getPlaylistById);
-  playlistRouter
-    .route("/remove/:videoId/:playlistId")
-    .patch(verifyJWT, removeVideoFromPlaylist);
-
-
+playlistRouter
+  .route("/remove/:videoId/:playlistId")
+  .patch(verifyJWT, removeVideoFromPlaylist);
+playlistRouter
+  .route("/delete/:playlistId")
+  .delete(verifyJWT, deletePlaylist);
 
 module.exports = { playlistRouter };

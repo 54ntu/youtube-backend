@@ -276,6 +276,38 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
 });
 
+const deletePlaylist = asyncHandler(async (req, res) => {
+  const { playlistId } = req.params;
+  // TODO: delete playlist
+  if(!isValidObjectId(playlistId)){
+    throw new ApiError(400,"playlist id is not valid")
+  }
+
+  const playlist = await Playlist.findById(playlistId);
+  // console.log(playlist);
+
+  if(!playlist){
+    throw new ApiError(404,"playlist not found")
+  }
+
+  if(playlist.owner.toString() !== req.user?._id){
+    throw new ApiError(401,"you are not authorized to delete the playlist")
+  }
+  
+  const deletedPlaylist = await Playlist.findByIdAndDelete(
+    playlistId
+  )
+
+  // console.log(deletedPlaylist);
+  if(!deletedPlaylist){
+    throw new ApiError(500,"playlist deletion failed.")
+  }
+
+  return res.status(200)
+  .json(new ApiResponse(200,"playlist deleted successfully."))
+
+
+});
 
 
 
@@ -285,4 +317,5 @@ module.exports = {
   addVideoToPlaylist,
   getPlaylistById,
   removeVideoFromPlaylist,
+  deletePlaylist,
 };
