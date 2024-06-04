@@ -58,39 +58,49 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   ]);
 
   // console.log(userPlaylist)
+});
 
- 
+const addVideoToPlaylist = asyncHandler(async (req, res) => {
+  const { playlistId, videoId } = req.params;
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "invalid playlist id");
+  }
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "invalid video id");
+  }
+
+  const video = await Video.findById(videoId);
+  //  console.log(video)
+
+  const playlist = await Playlist.findByIdAndUpdate(
+    playlistId,
+    {
+      $push: {
+        videos: video?._id,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+  //  console.log(playlist);
+
+  if (!playlist) {
+    throw new ApiError(500, "error while adding videos into the playlist");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        playlist,
+        "video is added successfully into the playlist",
+      ),
+    );
 });
 
 
- const addVideoToPlaylist = asyncHandler(async (req, res) => {
-   const { playlistId, videoId } = req.params;
-   if(!isValidObjectId(playlistId)){
-    throw new ApiError(400,"invalid playlist id")
-   }
-
-   if(!isValidObjectId(videoId)){
-    throw new ApiError(400,"invalid video id")
-   }
-   
-   const video = await Video.findById(videoId);
-  //  console.log(video)
-   
-
-   const playlist = await Playlist.findByIdAndUpdate(
-    playlistId,
-   {
-    $set:{
-      videos:videoId
-    }
-   },
-   {
-    new:true
-   }
-   )
-   console.log(playlist);
-
-
- });
 
 module.exports = { createPlaylist, getUserPlaylists, addVideoToPlaylist };
