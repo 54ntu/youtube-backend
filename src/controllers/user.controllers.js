@@ -21,13 +21,12 @@ const registerUser = asyncHandler(async (req, res) => {
   //return response
 
   const { username, email, fullName, password } = req.body;
-  console.log(username,email,fullName);
+  // console.log(username,email,fullName);
   if (!(username && email && fullName && password)) {
     throw new ApiError(400, "all fields are required!!!");
   }
 
   //user already exists - email or username
-  console.log(username, email, fullName);
   const userExist = await User.findOne({
     $or: [{ email }, { username }],
   });
@@ -71,15 +70,13 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //password hashing
   const hashedPassword = await hashPassword(password);
-    console.log('hashpassword : ', hashedPassword);
-  console.log(username, email, fullName);
+    // console.log('hashpassword : ', hashedPassword);
 
 
-  // const userId = uuid();
   const user = await User.create({
-    username:username,
-    email:email,
-    fullName:fullName,
+    username,
+    email,
+    fullName,
     password: hashedPassword,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",

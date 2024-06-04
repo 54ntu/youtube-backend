@@ -1,4 +1,4 @@
-const { isValidObjectId } = require("mongoose");
+const { isValidObjectId, default: mongoose } = require("mongoose");
 const { Playlist } = require("../models/playlists.models");
 const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
@@ -44,7 +44,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   const userPlaylist = await Playlist.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -72,6 +72,15 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 
   const video = await Video.findById(videoId);
   //  console.log(video)
+
+  const playListdetails= await Playlist.findById(playlistId);
+  // console.log(playListdetails.owner.toString())
+
+
+  // check whether the authorized user of the playlist is trying to add videos into the playlist or not
+  if(playListdetails.owner.toString() !== req.user?._id.toString()){
+    throw new ApiError(400,"you are not the owner of this playlist")
+  }
 
   const playlist = await Playlist.findByIdAndUpdate(
     playlistId,

@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
  
-
   {
     username: {
       type: String,
@@ -33,7 +32,7 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String, //we will store url fetch from cloudinary
-      // required: true,
+      required: true,
     },
 
     coverImage: {
