@@ -52,12 +52,43 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
         from: "videos",
         localField: "videos",
         foreignField: "_id",
-        as: "videoDetails",
+        as: "videosDetails",
       },
     },
+    {
+      $addFields: {
+        totalVideos: {
+          $size: "$videosDetails",
+        },
+        totalviews: {
+          $sum: "$videoDetails.views",
+        },
+      },
+    },
+    // {
+    //   $unwind: "$videosDetails",
+    // },
+
+    {
+      $project:{
+        name:1,
+        description:1,
+       totalviews:1,
+       totalVideos:1,
+       createdAt:1
+
+
+      }
+    }
+
   ]);
 
-  // console.log(userPlaylist)
+  if(!userPlaylist){
+    throw new ApiError(404,"playlist not found")
+  }
+
+  return res.status(200)
+  .json(new ApiResponse(200, userPlaylist,"userplaylist fetched successfully...."))
 });
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
