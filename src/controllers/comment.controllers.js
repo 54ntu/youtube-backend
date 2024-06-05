@@ -1,7 +1,8 @@
-const { isValidObjectId } = require("mongoose");
+const { isValidObjectId, default: mongoose } = require("mongoose");
 const { Comment } = require("../models/comments.models");
 const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
+const { Video } = require("../models/video.models");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 const addComment = asyncHandler(async (req, res) => {
@@ -113,4 +114,96 @@ const deleteComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "comment deleted successfully"));
 });
 
-module.exports = { addComment, updateComment, deleteComment };
+const getVideoComments = asyncHandler(async (req, res) => {
+  //TODO: get all comments for a video
+  const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "video id is not valid");
+  }
+
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "video not found!!!!");
+  }
+
+
+  const pageNumber = parseInt(page,10)
+  const limitNumber = parseInt(limit,10);
+  const skip = (pageNumber-1)*limitNumber;
+
+  const aggregateComments = await Comment.aggregate([
+    {
+      $match: {
+        video: new mongoose.Types.ObjectId(videoId),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "video",
+        foreignField: "_id",
+        as: "video",
+        pipeline: [
+          {
+            $project: {
+              title: 1,
+              "videoFile.url": 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $unwind: "$video",
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerdetails",
+        pipeline: [
+          {
+            $project: {
+              username: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $unwind: "$ownerdetails",
+    },
+
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    {
+      $project: {
+        _id: 0,
+        content: 1,
+        video: {
+          "videoFile.url": 1,
+          title: 1,
+        },
+        "ownerdetails.username": 1,
+        createdAt: 1,
+      },
+    },
+    {
+      $skip: skip, // Skip documents for pagination
+    },
+    {
+      $limit: limitNumber, // Limit documents for pagination
+    },
+  ]);
+
+  return res.json(aggregateComments);
+});
+
+module.exports = { addComment, updateComment, deleteComment, getVideoComments };
