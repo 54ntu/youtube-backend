@@ -1,3 +1,4 @@
+const { isValidObjectId } = require("mongoose");
 const { Comment } = require("../models/comments.models");
 const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
@@ -83,4 +84,33 @@ const updateComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updatedComment, "comment updated successfully"));
 });
 
-module.exports = { addComment, updateComment };
+const deleteComment = asyncHandler(async (req, res) => {
+  // TODO: delete a comment
+  //get the comment id from the params
+  //query database
+  //check the user id from req and owner id store in database are same
+  // query delete operations to the database
+  //return res
+  const { commentId } = req.params;
+  if (!isValidObjectId(commentId)) {
+    throw new ApiError(400, "comment id is not valid");
+  }
+
+  const comments = await Comment.findById(commentId);
+
+  if (comments.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(401, "you are not authorized to delete this comment");
+  }
+
+  const deletedComment = await Comment.findByIdAndDelete(commentId);
+
+  if (!deletedComment) {
+    throw new ApiError(500, " comment deletion failed");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "comment deleted successfully"));
+});
+
+module.exports = { addComment, updateComment, deleteComment };
