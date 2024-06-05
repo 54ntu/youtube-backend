@@ -1,4 +1,4 @@
-const { isValidObjectId } = require("mongoose");
+const { isValidObjectId, default: mongoose } = require("mongoose");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { ApiError } = require("../utils/ApiError");
 const { Likes } = require("../models/likes.models");
@@ -46,6 +46,17 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   //if exist delete like
   //
   const { commentId } = req.params;
+  // if(!isValidObjectId(commentId)){
+  //   throw new ApiError(400,"invalid comment id")
+  // }
+
+  const existinglikeonComment = await Likes.findOne({
+    comment:new mongoose.Types.ObjectId( commentId),
+    likedBy:req.user?._id
+  })
+
+  console.log(existinglikeonComment)
+
 });
 
 module.exports = { toggleVideoLike, toggleCommentLike };

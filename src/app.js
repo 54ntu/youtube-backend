@@ -7,6 +7,7 @@ const { tweetRouter } = require("./routes/tweet.routes");
 const { subscriptionRouter } = require("./routes/subscription.routes");
 const { playlistRouter } = require("./routes/playlist.routes");
 const { likeRouter } = require("./routes/likes.route");
+const { commentRouter } = require("./routes/comment.route");
 const app = express();
 
 app.use(cors());
@@ -23,5 +24,6 @@ app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/playlist", playlistRouter);
 app.use("/api/v1/likes", likeRouter);
+app.use("/api/v1/comment", commentRouter);
 
 module.exports = { app };
