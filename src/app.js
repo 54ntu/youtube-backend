@@ -8,6 +8,7 @@ const { subscriptionRouter } = require("./routes/subscription.routes");
 const { playlistRouter } = require("./routes/playlist.routes");
 const { likeRouter } = require("./routes/likes.route");
 const { commentRouter } = require("./routes/comment.route");
+const { dashboardRouter } = require("./routes/dashboard.routes");
 const app = express();
 
 app.use(cors());
@@ -25,5 +26,6 @@ app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/playlist", playlistRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
 module.exports = { app };
