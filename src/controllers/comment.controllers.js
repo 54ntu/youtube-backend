@@ -203,7 +203,14 @@ const getVideoComments = asyncHandler(async (req, res) => {
     },
   ]);
 
-  return res.json(aggregateComments);
+  // return res.json(aggregateComments);
+  if(!aggregateComments){
+    throw new ApiError(500,"error on fetching comments")
+  }
+
+  return res.status(200)
+  .json(new ApiResponse(200,aggregateComments[0],"comments fetched successfully!!!!"))
+
 });
 
 module.exports = { addComment, updateComment, deleteComment, getVideoComments };
