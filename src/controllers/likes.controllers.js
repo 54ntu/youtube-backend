@@ -51,12 +51,63 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   // }
 
   const existinglikeonComment = await Likes.findOne({
-    comment:new mongoose.Types.ObjectId( commentId),
+    comment:new mongoose.Types.ObjectId(commentId),
     likedBy:req.user?._id
   })
 
-  console.log(existinglikeonComment)
+  // console.log(existinglikeonComment)
+  if(existinglikeonComment){
+    await Likes.findByIdAndDelete(existinglikeonComment._id)
+    return res.status(200)
+    .json(new ApiResponse(200,{},"unliked successfully"))
+  }
+  else{
+    await Likes.create({
+      comment:commentId,
+      likedBy:req.user?._id
+    })
+
+    return res.status(200)
+    .json(new ApiResponse(200, "liked on comment successfully!!!"))
+  }
 
 });
 
-module.exports = { toggleVideoLike, toggleCommentLike };
+
+
+const toggleTweetLike = asyncHandler(async (req, res) => {
+  const { tweetId } = req.params;
+  //TODO: toggle like on tweet
+  if(!isValidObjectId(tweetId)){
+    throw new ApiError(400,"invalid tweet id")
+  }
+
+  const existingTweetlike = await Likes.findOne({
+    tweet :tweetId,
+    likedBy:req.user?._id
+  })
+
+  if(existingTweetlike){
+    await Likes.findByIdAndDelete(existingTweetlike._id)
+    return res.status(200)
+    .json(new ApiResponse(200,{},"unliked successfully"))
+  }
+
+  else{
+    await Likes.create({
+      tweet:tweetId,
+      likedBy:req.user?._id
+    })
+
+    return res.status(200)
+    .json(new ApiResponse(200,"liked successfully on tweets"))
+  }
+
+
+});
+
+
+
+
+
+module.exports = { toggleVideoLike, toggleCommentLike, toggleTweetLike };
