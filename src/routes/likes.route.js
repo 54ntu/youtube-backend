@@ -4,6 +4,7 @@ const {
   toggleVideoLike,
   toggleCommentLike,
   toggleTweetLike,
+  getLikedVideos,
 } = require("../controllers/likes.controllers");
 const likeRouter = express.Router();
 
@@ -14,5 +15,10 @@ likeRouter
 likeRouter
   .route("/toggletweetLike/:tweetId")
   .post(verifyJWT, toggleTweetLike);
+  likeRouter
+    .route("/getLikedVideos")
+    .get(verifyJWT, getLikedVideos);
+
+
 
 module.exports = { likeRouter };
